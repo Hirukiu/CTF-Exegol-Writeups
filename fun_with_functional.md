@@ -6,10 +6,6 @@
 - **Difficulté** : Easy
 - **Objectif** : obtenir un accès sur la machine et lire `user.txt`.
 
-Services exposés :
-- **SSH (22)** — OpenSSH 10.0p2 Debian 7+deb13u4
-- **HTTP (5001)** — service applicatif (identifié `commplex-link?` par nmap)
-
 ---
 
 ## 1. Reconnaissance
@@ -70,10 +66,6 @@ main :: IO ()
 main = return ()
 ```
 
-> Le `main = putStrLn "I love Haskell"` attendu par la page **n'est pas nécessaire** : le
-> payload part dès la **compilation** (splice `runIO`), avant toute exécution du binaire. Un
-> `main` valide (`return ()`) suffit pour que GHC compile jusqu'au splice.
-
 On met un listener en place côté attaquant :
 
 ```bash
@@ -85,16 +77,9 @@ Puis on **uploade le fichier `.hs`** : dès que le serveur le compile avec GHC, 
 
 ---
 
-## 4. Débogage du reverse shell
+## 4. Reverse shell
 
-Plusieurs erreurs corrigées en cours de route :
-
-- **IP par défaut non remplacée** (`0.0.0.0` laissé dans le payload) ;
-- **typo dans l'IP** (`10.8.0.276` au lieu de `10.8.0.246`) ;
-- **mauvaise interface réseau** : il fallait utiliser l'IP du **VPN `tun0`**, pas `eth0`
-  (qui était un réseau Docker interne).
-
-Une fois le payload correct uploadé et le listener en place, la RCE fonctionne : on obtient
+Une fois le payload  uploadé et le listener en place, la RCE fonctionne : on obtient
 un shell sur la machine et l'accès à `user.txt`.
 
 ```bash

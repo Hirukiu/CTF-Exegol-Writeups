@@ -2,8 +2,8 @@
 
 ## Contexte
 - **Nom du challenge** : Batman's Secret #2
-- **Catégorie** : Privilege Escalation
-- **Difficulté** : Medium
+- **Catégorie** : Injection
+- **Difficulté** : Easy
 - **Objectif** : lire le fichier `/root/root.txt`, ce qui nécessite les droits **root**.
 - **Point de départ** : exécution de commandes en tant qu'utilisateur `bruce`
   (via l'injection de commande obtenue dans le challenge *Batman's Secret*).
