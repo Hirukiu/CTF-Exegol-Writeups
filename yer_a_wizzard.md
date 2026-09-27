@@ -4,6 +4,7 @@
 - **Nom du challenge** : Yer a Wizzard
 - **Catégorie** : Cracking
 - **Difficulté** : Easy
+- **Objéctif** : trouver user.txt
 
 ---
 
