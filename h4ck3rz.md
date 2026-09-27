@@ -100,20 +100,6 @@ sudo -u titouan awk 1 /home/titouan/user.txt
 
 ---
 
-## Récapitulatif de la chaîne d'attaque
-
-| Étape | De → Vers | Vecteur exploité |
-|-------|-----------|------------------|
-| 1 | — | `robots.txt` + commentaire HTML → fuite d'infos |
-| 2 | — | Identifiants web récupérés (`login.php`) |
-| 3 | → `www-data` | RCE via Shell Panel mal sécurisé (`portal.php`) |
-| 4 | `www-data` → `titouan` | Misconfiguration sudo (`NOPASSWD: ALL`) → `user.txt` |
-
-> La suite (escalade `titouan` → `root` et lecture de `root.txt`) est traitée dans le
-> rapport **H4ck3rz #2**.
-
----
-
 ## Outils utilisés
 - `nmap` — scan des ports et détection de services
 - `gobuster` — énumération des fichiers/répertoires web

